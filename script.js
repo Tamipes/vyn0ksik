@@ -120,7 +120,9 @@ async function run() {
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-		requestAnimationFrame(render);
+		setTimeout(() => {
+			requestAnimationFrame(render);
+		}, 1000.0 / 30.0);
 	}
 }
 
