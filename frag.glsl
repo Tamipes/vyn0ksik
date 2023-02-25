@@ -27,15 +27,22 @@ float hash2(vec2 v, in float seed) {
   return h;
 }
 
+float hash3(vec2 p, in float seed)  // replace this by something better
+{
+    p  = fract( p*0.6180339887 );
+    p *= 25.0;
+    return fract( p.x*p.y*(p.x+p.y) );
+}
+
 float noise(in vec2 x) {
     vec2 p = floor(x);
     vec2 f = fract(x);
     f = f * f * (3.0 - 2.0 * f);
 
-    float a = hash2(p + vec2(0, 0), 2018.2023);
-    float b = hash2(p + vec2(1, 0), 2018.2023);
-    float c = hash2(p + vec2(0, 1), 2018.2023);
-    float d = hash2(p + vec2(1, 1), 2018.2023);
+    float a = hash3(p + vec2(0, 0), 2018.2023);
+    float b = hash3(p + vec2(1, 0), 2018.2023);
+    float c = hash3(p + vec2(0, 1), 2018.2023);
+    float d = hash3(p + vec2(1, 1), 2018.2023);
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
@@ -64,10 +71,12 @@ float pattern(in vec2 p, out vec2 q, out vec2 r) {
     return complex_noise(p + 4.0 * r);
 }
 
-#define COLOR_COUNT 2
+#define COLOR_COUNT 11
 vec3 COLORS[COLOR_COUNT]; // WebGL officially sucks and should be very much ashamed of itself
 
 vec3 color_interpolation(float t) {
+    //t = t * t * t * t * (35.0 + t * (-84.0 + t * (70.0 + t * -20.0)));
+
     int index1 = int(floor(t * float(COLOR_COUNT - 1)));
     int index2 = index1 + 1;
     
@@ -91,14 +100,34 @@ vec3 color_interpolation(float t) {
 }
 
 void main() {
-    COLORS[0] = vec3(.831, .686, .216);
-    COLORS[1] = vec3(.753, .753, .753);    
+    COLORS[0] = vec3(.953, 1.00, .071);
+    COLORS[1] = vec3(.965, .843, .161);
+    COLORS[2] = vec3(.957, .643, .122);
+    COLORS[3] = vec3(.933, .424, .125);
+    COLORS[4] = vec3(.902, .145, .141);
+
+    COLORS[5] = vec3(.725, .059, .141);
+
+    COLORS[6] = vec3(.902, .145, .141);
+    COLORS[7] = vec3(.933, .424, .125);
+    COLORS[8] = vec3(.957, .643, .122);
+    COLORS[9] = vec3(.965, .843, .161);
+    COLORS[10] = vec3(.953, 1.00, .071);
 
     vec2 uv = gl_FragCoord.xy / uResolution.xy;
 
     vec2 q, r;
     float p = pattern((gl_FragCoord.xy * 0.035) + vec2(2018.0, 2023.0), q, r);
-    float n = complex_noise(gl_FragCoord.xy * 0.035 + vec2(2018.0, 2023.0));
 
-    gl_FragColor = vec4(mix(color_interpolation(n) * p, color_interpolation(mod(n * 515.412, 1.0)), (q.x + r.y + n) * 0.333), 1.0);
+
+    float angle = PI / 180.0 * uTime;
+    float c = cos(angle);
+    float s = sin(angle);
+    mat2 rot = mat2(c, s, -s, c);
+    vec2 translate = vec2(2018.0 / 2857.4, 2023.0 / 2857.4) * uTime * 0.1;
+    vec2 center = uResolution.xy / 2.0 + vec2(1.0, 1.0);
+
+    float n = complex_noise(((gl_FragCoord.xy - center) * 0.00275 * rot + center + translate));
+
+    gl_FragColor = vec4(color_interpolation(fract(n + (q.x + q.y + r.x + r.y) * 0.15)) * p, 1.0);
 }

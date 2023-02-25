@@ -103,6 +103,7 @@ async function run() {
 
 	// main render function
 	let then = 0;
+	let offset = Math.random() * 1000.0;
 	function render(now) {
 		now *= 0.001;
 		const deltaTime = now - then;
@@ -116,7 +117,7 @@ async function run() {
 			shaderProgram,
 			"uTime"
 		);
-		gl.uniform1f(timeUniformLocation, now);
+		gl.uniform1f(timeUniformLocation, now + offset);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
